@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const AuthController = require('../controllers/AuthController');
-const GoogleAuthController = require('../controllers/googleAuthController');
+const GoogleAuthController = require('../controllers/GoogleAuthControllers');
 const authentication = require('../middlewares/authentication');
 
 // Public routes

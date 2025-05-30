@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const FusionController = require('../controllers/fusionController');
+const FusionController = require('../controllers/FusionControllers');
 const authentication = require('../middlewares/authentication');
 
 // Semua endpoint memerlukan authentication

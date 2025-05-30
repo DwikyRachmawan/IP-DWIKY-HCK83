@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const FavoriteController = require('../controllers/favoriteController');
+const FavoriteController = require('../controllers/FavoriteControllers');
 const authentication = require('../middlewares/authentication');
 
 // Protected routes - user harus login
