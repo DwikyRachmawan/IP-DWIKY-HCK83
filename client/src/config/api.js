@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const api = axios.create({
-  baseURL: 'http://localhost:3000', // Adjust port according to your server
+  baseURL: 'http://dwiky.fun', // Adjust port according to your server
   headers: {
     'Content-Type': 'application/json',
   },
