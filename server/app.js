@@ -18,11 +18,5 @@ app.use('/', routes);
 app.use(errorHandler);
 
 // Start server only if not in test environment
-if (process.env.NODE_ENV !== 'test') {
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`🚀 Digimon Fusion Generator API running on port ${PORT}`);
-  });
-}
 
 module.exports = app;
