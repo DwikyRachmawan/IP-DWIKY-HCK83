@@ -324,4 +324,92 @@ describe('Auth Controller', () => {
       expect(response.status).toBe(401);
     });
   });
+
+  describe('Error Handling', () => {
+    beforeEach(async () => {
+      user = await User.create({
+        username: 'testuser',
+        email: 'test@example.com',
+        password: 'password123'
+      });
+      token = signToken({ id: user.id, email: user.email });
+    });
+
+    it('should handle server errors in register', async () => {
+      // Mock User.create to throw an error
+      const originalCreate = User.create;
+      User.create = jest.fn().mockRejectedValue(new Error('Database connection failed'));
+
+      const response = await request(app)
+        .post('/auth/register')
+        .send({
+          username: 'newuser',
+          email: 'new@example.com',
+          password: 'password123'
+        });
+
+      expect(response.status).toBe(500);
+
+      // Restore original method
+      User.create = originalCreate;
+    });
+
+    it('should handle server errors in login', async () => {
+      // Mock User.findOne to throw an error
+      const originalFindOne = User.findOne;
+      User.findOne = jest.fn().mockRejectedValue(new Error('Database error'));
+
+      const response = await request(app)
+        .post('/auth/login')
+        .send({
+          email: 'test@example.com',
+          password: 'password123'
+        });
+
+      expect(response.status).toBe(500);
+
+      // Restore original method
+      User.findOne = originalFindOne;
+    });
+
+    it('should handle server errors in getProfile', async () => {
+      // Mock authentication middleware to throw error
+      const response = await request(app)
+        .get('/auth/profile')
+        .set('Authorization', 'Bearer invalid-token-format');
+
+      expect(response.status).toBe(401);
+    });
+
+    it('should handle server errors in updateProfile', async () => {
+      // Mock User.update to throw an error
+      const originalUpdate = User.update;
+      User.update = jest.fn().mockRejectedValue(new Error('Update failed'));
+
+      const response = await request(app)
+        .put('/auth/profile')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ username: 'newusername' });
+
+      expect(response.status).toBe(500);
+
+      // Restore original method
+      User.update = originalUpdate;
+    });
+
+    it('should handle server errors in deleteProfile', async () => {
+      // Mock User.destroy to throw an error
+      const originalDestroy = User.destroy;
+      User.destroy = jest.fn().mockRejectedValue(new Error('Delete failed'));
+
+      const response = await request(app)
+        .delete('/auth/profile')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(500);
+
+      // Restore original method
+      User.destroy = originalDestroy;
+    });
+  });
 });

@@ -214,4 +214,82 @@ describe('Fusion Controller', () => {
       expect(response.body.data[0].fusionName).toBe('UserFusion');
     });
   });
+
+  describe('Error Handling', () => {
+    it('should handle favorites checking error', async () => {
+      // Mock Favorite.findAll to throw error
+      const originalFindAll = Favorite.findAll;
+      Favorite.findAll = jest.fn().mockRejectedValue(new Error('Database error'));
+
+      const response = await request(app)
+        .post('/fusion')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          digimon1: 'Agumon',
+          digimon2: 'Gabumon'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.fusion).toHaveProperty('digimon1IsFavorite', false);
+      expect(response.body.fusion).toHaveProperty('digimon2IsFavorite', false);
+
+      Favorite.findAll = originalFindAll;
+    });
+
+    it('should handle fusion history save error', async () => {
+      // Mock FusionHistory.create to throw error
+      const originalCreate = FusionHistory.create;
+      FusionHistory.create = jest.fn().mockRejectedValue(new Error('Database error'));
+
+      const response = await request(app)
+        .post('/fusion')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          digimon1: 'Agumon',
+          digimon2: 'Gabumon'
+        });
+
+      expect(response.status).toBe(200);
+      expect(response.body.message).toBe('Fusion berhasil dibuat');
+
+      FusionHistory.create = originalCreate;
+    });
+
+    it('should handle database error in getFusionHistory', async () => {
+      const originalFindAll = FusionHistory.findAll;
+      FusionHistory.findAll = jest.fn().mockRejectedValue(new Error('Database error'));
+
+      const response = await request(app)
+        .get('/fusion/history')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(500);
+
+      FusionHistory.findAll = originalFindAll;
+    });
+
+    it('should handle general fusion creation error', async () => {
+      // Mock generateFusionWithGemini to throw error
+      const { generateFusionWithGemini } = require('../helpers/gemini');
+      const originalFunction = generateFusionWithGemini;
+      
+      // Mock the entire module
+      jest.doMock('../helpers/gemini', () => ({
+        generateFusionWithGemini: jest.fn().mockRejectedValue(new Error('Gemini API error'))
+      }));
+
+      const response = await request(app)
+        .post('/fusion')
+        .set('Authorization', `Bearer ${token}`)
+        .send({
+          digimon1: 'Agumon',
+          digimon2: 'Gabumon'
+        });
+
+      expect(response.status).toBe(500);
+
+      // Restore mock
+      jest.unmock('../helpers/gemini');
+    });
+  });
 });

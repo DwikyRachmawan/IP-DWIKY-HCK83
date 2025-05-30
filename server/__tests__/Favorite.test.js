@@ -249,4 +249,69 @@ describe('Favorite Controller', () => {
       expect(response.status).toBe(401);
     });
   });
+
+  describe('Error Handling', () => {
+    it('should handle database errors in addFavorite', async () => {
+      // Mock Favorite.create to throw error
+      const originalCreate = Favorite.create;
+      Favorite.create = jest.fn().mockRejectedValue(new Error('Database error'));
+
+      const response = await request(app)
+        .post('/favorites')
+        .set('Authorization', `Bearer ${token}`)
+        .send({ digimonName: 'Agumon' });
+
+      expect(response.status).toBe(500);
+
+      // Restore original method
+      Favorite.create = originalCreate;
+    });
+
+    it('should handle database errors in getFavorites', async () => {
+      const originalFindAll = Favorite.findAll;
+      Favorite.findAll = jest.fn().mockRejectedValue(new Error('Database error'));
+
+      const response = await request(app)
+        .get('/favorites')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(500);
+
+      Favorite.findAll = originalFindAll;
+    });
+
+    it('should handle database errors in removeFavorite', async () => {
+      // First create a favorite
+      await Favorite.create({
+        userId: user.id,
+        digimonName: 'Agumon',
+        digimonLevel: 'Rookie',
+        digimonImage: 'agumon.jpg'
+      });
+
+      const originalDestroy = Favorite.prototype.destroy;
+      Favorite.prototype.destroy = jest.fn().mockRejectedValue(new Error('Database error'));
+
+      const response = await request(app)
+        .delete('/favorites/Agumon')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(500);
+
+      Favorite.prototype.destroy = originalDestroy;
+    });
+
+    it('should handle database errors in checkFavorite', async () => {
+      const originalFindOne = Favorite.findOne;
+      Favorite.findOne = jest.fn().mockRejectedValue(new Error('Database error'));
+
+      const response = await request(app)
+        .get('/favorites/check/Agumon')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(response.status).toBe(500);
+
+      Favorite.findOne = originalFindOne;
+    });
+  });
 });
